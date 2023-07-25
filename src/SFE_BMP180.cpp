@@ -186,7 +186,7 @@ char SFE_BMP180::readBytes(unsigned char *values, char length)
 	_error = Wire.endTransmission();
 	if (_error == 0)
 	{
-		Wire.requestFrom(_i2c_addr,length);
+		Wire.requestFrom((uint8_t)_i2c_addr,(uint8_t)length);
 		while(Wire.available() != length) ; // wait until bytes are ready
 		for(x=0;x<length;x++)
 		{
