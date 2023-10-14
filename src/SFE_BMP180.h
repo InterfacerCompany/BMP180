@@ -25,10 +25,7 @@
 #else
 #include "WProgram.h"
 #endif
-
-#ifndef BMP180_ALT_EN
-# define BMP180_ALT_EN 0   // altitude support is disabled by default
-#endif // BMP180_ALT_EN
+#include <Wire.h>
 
 #define BMP180_ADDR 				0x77 // 7-bit address
 
@@ -46,7 +43,7 @@ class SFE_BMP180
 	public:
 		SFE_BMP180(); // base type
 
-		char begin(uint8_t i2cAddr = BMP180_ADDR);
+		char begin(TwoWire* wire_p = &Wire, uint8_t i2cAddr = BMP180_ADDR);
 			// call pressure.begin() to initialize BMP180 before use
 			// returns 1 if success, 0 if failure (bad component or I2C bus shorted?)
 
@@ -70,7 +67,6 @@ class SFE_BMP180
 			// places returned value in P variable (mbar)
 			// returns 1 for success, 0 for fail
 
-#if BMP180_ALT_EN == 1
 		double sealevel(double P, double A);
 			// convert absolute pressure to sea-level pressure (as used in weather data)
 			// P: absolute pressure (mbar)
@@ -82,7 +78,6 @@ class SFE_BMP180
 			// P: absolute pressure (mbar)
 			// P0: fixed baseline pressure (mbar)
 			// returns signed altitude in meters
-#endif // BMP180_ALT_EN == 1
 
 		char getError(void);
 			// If any library command fails, you can retrieve an extended
@@ -124,6 +119,7 @@ class SFE_BMP180
 		double c5,c6,mc,md,x0,x1,x2,y0,y1,y2,p0,p1,p2;
 		char _error;
 		uint8_t _i2c_addr;
+	    TwoWire* _wire_p;                     /**< Wire object pointer*/
 };
 
 #endif

@@ -18,7 +18,6 @@
 */
 
 #include <SFE_BMP180.h>
-#include <Wire.h>
 #include <stdio.h>
 #include <math.h>
 
@@ -29,16 +28,13 @@ SFE_BMP180::SFE_BMP180()
 }
 
 
-char SFE_BMP180::begin(uint8_t i2cAddr)
+char SFE_BMP180::begin(TwoWire* wire_p, uint8_t i2cAddr)
 // Initialize library for subsequent pressure measurements
 {
 	double c3,c4,b1;
 
+	_wire_p   = wire_p;
 	_i2c_addr = i2cAddr;
-
-	// Start up the Arduino's "wire" (I2C) library:
-
-	Wire.begin();
 
 	// The BMP180 includes factory calibration data stored on the device.
 	// Each device has different numbers, these must be retrieved and
@@ -181,16 +177,16 @@ char SFE_BMP180::readBytes(unsigned char *values, char length)
 {
 	char x;
 
-	Wire.beginTransmission(_i2c_addr);
-	Wire.write(values[0]);
-	_error = Wire.endTransmission();
+	_wire_p->beginTransmission(_i2c_addr);
+	_wire_p->write(values[0]);
+	_error = _wire_p->endTransmission();
 	if (_error == 0)
 	{
-		Wire.requestFrom((uint8_t)_i2c_addr,(uint8_t)length);
-		while(Wire.available() != length) ; // wait until bytes are ready
+		_wire_p->requestFrom((uint8_t)_i2c_addr,(uint8_t)length);
+		while(_wire_p->available() != length) ; // wait until bytes are ready
 		for(x=0;x<length;x++)
 		{
-			values[x] = Wire.read();
+			values[x] = _wire_p->read();
 		}
 		return(1);
 	}
@@ -205,9 +201,9 @@ char SFE_BMP180::writeBytes(unsigned char *values, char length)
 {
 	char x;
 
-	Wire.beginTransmission(_i2c_addr);
-	Wire.write(values,length);
-	_error = Wire.endTransmission();
+	_wire_p->beginTransmission(_i2c_addr);
+	_wire_p->write(values,length);
+	_error = _wire_p->endTransmission();
 	if (_error == 0)
 		return(1);
 	else
@@ -358,7 +354,6 @@ char SFE_BMP180::getPressure(double &P, double &T)
 	return(result);
 }
 
-#if BMP180_ALT_EN == 1
 double SFE_BMP180::sealevel(double P, double A)
 // Given a pressure P (mb) taken at a specific altitude (meters),
 // return the equivalent pressure (mb) at sea level.
@@ -374,7 +369,6 @@ double SFE_BMP180::altitude(double P, double P0)
 {
 	return(44330.0*(1-pow(P/P0,1/5.255)));
 }
-#endif // BMP180_ALT_EN == 1
 
 char SFE_BMP180::getError(void)
 	// If any library command fails, you can retrieve an extended
